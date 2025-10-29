@@ -19,6 +19,7 @@ public class PaymentController {
 	@PostMapping("/payments/order-create")
 	public String createOrder()	{
 
+		log.debug("Received request to create order in PaymentController");
 		log.info("Creating order in PayPal order service");
 		String response = paymentService.createOrder();
 		log.info("Order creation response from service response: {}", response);
