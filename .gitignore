@@ -92,7 +92,7 @@ Thumbs.db
 # =====================================
 
 # Ignore application property/yaml files containing secrets
-src/main/resources/application.properties
+src/main/resources/application-local.properties
 src/main/resources/application.yml
 src/main/resources/*.properties
 src/main/resources/*.yml
