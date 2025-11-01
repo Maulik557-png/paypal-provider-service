@@ -8,10 +8,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hulkhiretech.payments.constant.Constant;
 import com.hulkhiretech.payments.http.HttpRequest;
 import com.hulkhiretech.payments.http.HttpServiceEngine;
+import com.hulkhiretech.payments.paypal.res.PaypalOAuthToken;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TokenService {
 
 	private final HttpServiceEngine httpServiceEngine; 
+	private final ObjectMapper objectMapper;
 
 	@Value("${paypal.client.id}")
 	private String clientID;
@@ -35,6 +37,10 @@ public class TokenService {
 	// TODO Implement Redis and take care of expiry
 	private static String accessToken;
 	
+	/**
+	 * Method to get Access Token from OAuth service
+	 * @return access token as String
+	 */
 	public String getAccessToken()	{
 
 		log.info("Retriving Access Token from TokenService");
@@ -61,10 +67,17 @@ public class TokenService {
 		httpRequest.setBody(formData);	
 
 		ResponseEntity<String> response = httpServiceEngine.makeHttpCall(httpRequest);
-
 		log.info("HTTP Response from HttpServiceEngine: {}", response);
 		
-		return response.getBody();
+		try {
+			PaypalOAuthToken token = objectMapper.readValue(response.getBody(), PaypalOAuthToken.class);
+			accessToken = token.getAccessToken();
+			log.info("Access Token retrived accessToken: {}", accessToken);
+			
+			return "Access token: " + token.getAccessToken() + "\nExpires in: " + token.getExpiresIn();
+		} catch (Exception e) {
+			log.error("Exception while parsing OAuth response: {}", e.getMessage());
+			throw new RuntimeException("Failed to parse OAuth response: " + e.getMessage());
+		}	
 	}
-
 }
