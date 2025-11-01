@@ -32,15 +32,9 @@ public class PaymentServiceImpl implements PaymentService {
 		log.info("Access Token retrived accessToken: {}", accessToken);
 
 		log.info("Creating order in PaymentServiceImpl");
-		
+		// TODO Call PayPal create order API
 		log.info("Order created successfully in PaymentServiceImpl");
 		
-		return "Order Created from service - " + accessToken;
+		return accessToken;
 	}
-
-	@PostConstruct
-	public void init()	{
-		log.info("Initializing PaymentServiecImpl");
-	}
-
 }
