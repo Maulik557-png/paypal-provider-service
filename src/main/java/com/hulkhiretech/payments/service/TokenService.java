@@ -60,7 +60,6 @@ public class TokenService {
 		formData.add(Constant.GRANT_TYPE, Constant.CLIENT_CREDENTIALS);
 		
 		HttpRequest httpRequest = new HttpRequest();
-
 		httpRequest.setHttpMethod(HttpMethod.POST);
 		httpRequest.setUrl(oauthUrl);
 		httpRequest.setHeaders(headers);
@@ -74,7 +73,7 @@ public class TokenService {
 			accessToken = token.getAccessToken();
 			log.info("Access Token retrived accessToken: {}", accessToken);
 			
-			return "Access token: " + token.getAccessToken() + "\nExpires in: " + token.getExpiresIn();
+			return accessToken;
 		} catch (Exception e) {
 			log.error("Exception while parsing OAuth response: {}", e.getMessage());
 			throw new RuntimeException("Failed to parse OAuth response: " + e.getMessage());
