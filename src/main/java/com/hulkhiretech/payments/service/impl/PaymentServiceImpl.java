@@ -1,8 +1,12 @@
 package com.hulkhiretech.payments.service.impl;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -11,16 +15,16 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hulkhiretech.payments.constant.Constant;
 import com.hulkhiretech.payments.dto.Amount;
-import com.hulkhiretech.payments.dto.Breakdown;
 import com.hulkhiretech.payments.dto.ExperienceContext;
-import com.hulkhiretech.payments.dto.Money;
 import com.hulkhiretech.payments.dto.OrderRequest;
 import com.hulkhiretech.payments.dto.PaymentSource;
 import com.hulkhiretech.payments.dto.Paypal;
 import com.hulkhiretech.payments.dto.PurchaseUnit;
 import com.hulkhiretech.payments.http.HttpRequest;
 import com.hulkhiretech.payments.http.HttpServiceEngine;
+import com.hulkhiretech.payments.pojo.CreateOrderReq;
 import com.hulkhiretech.payments.service.TokenService;
 import com.hulkhiretech.payments.service.interfaces.PaymentService;
 
@@ -32,6 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
+	
+	@Value("${paypal.create.order.url}")
+	private String createOrderUrl;
 
 	private final TokenService tokenService;
 	
@@ -40,7 +47,8 @@ public class PaymentServiceImpl implements PaymentService {
 	private final HttpServiceEngine httpServiceEngine;
 	
 	@Override
-	public String createOrder() {
+	public String createOrder(CreateOrderReq createOrderReq) {
+		log.debug("Creating order in PaymentServiceImpl||createOrderReq: {}", createOrderReq);
 		
 		/* TODO
 		 * 1. getAccessToken (OAuth) - DONE
@@ -49,51 +57,32 @@ public class PaymentServiceImpl implements PaymentService {
 		 * 4. What to return to your calling service (payment-processing-service)
 		 */
 		
-		log.debug("Creating order in PaymentServiceImpl");
 		String accessToken = tokenService.getAccessToken();
 		log.info("Access Token retrived accessToken: {}", accessToken);
 
 		log.info("Creating order in PaymentServiceImpl");
-		// TODO Call PayPal create order API
-		
-		// Create Money objects
-        Money itemTotal = new Money();
-        itemTotal.setCurrencyCode("USD");
-        itemTotal.setValue("1.00");
-
-        Money shipping = new Money();
-        shipping.setCurrencyCode("USD");
-        shipping.setValue("5.99");
-
-        Money discount = new Money();
-        discount.setCurrencyCode("USD");
-        discount.setValue("0.00");
-
-        // Breakdown
-        Breakdown breakdown = new Breakdown();
-        breakdown.setItemTotal(itemTotal);
-        breakdown.setShipping(shipping);
-        breakdown.setDiscount(discount);
 
         // Amount
         Amount amount = new Amount();
-        amount.setCurrencyCode("USD");
-        amount.setValue("6.99");
-        amount.setBreakdown(breakdown);
+        amount.setCurrencyCode(createOrderReq.getCurrencyCode());
+		amount.setValue(String.format(Constant.TWO_DECIMAL_FORMAT, createOrderReq.getAmount()));
 
         // Purchase Unit
         PurchaseUnit purchaseUnit = new PurchaseUnit();
-        purchaseUnit.setInvoiceId("INV-1730413562000-3655");
+        String timestamp = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now());
+        int randomNum = ThreadLocalRandom.current().nextInt(1000, 9999);
+        String invoiceId = "INV-" + timestamp + "-" + randomNum;
+        purchaseUnit.setInvoiceId(invoiceId);
         purchaseUnit.setAmount(amount);
 
         // Experience Context
         ExperienceContext context = new ExperienceContext();
-        context.setPaymentMethodPreference("IMMEDIATE_PAYMENT_REQUIRED");
-        context.setLandingPage("LOGIN");
-        context.setShippingPreference("NO_SHIPPING");
-        context.setUserAction("PAY_NOW");
-        context.setReturnUrl("https://example.com/returnUrl");
-        context.setCancelUrl("https://example.com/cancelUrl");
+        context.setPaymentMethodPreference(Constant.PAYMENT_PREFERENEC_IMMEDIATE_PAYMENT_REQUIRED);
+        context.setLandingPage(Constant.LANDING_PAGE_LOGIN);
+        context.setShippingPreference(Constant.SHIPPING_PREFERENCE_NO_SHIPPING);
+        context.setUserAction(Constant.USER_ACTION_PAY_NOW);
+        context.setReturnUrl(createOrderReq.getReturnUrl());
+        context.setCancelUrl(createOrderReq.getCancelUrl());
 
         // Payment Source
         Paypal paypal = new Paypal();
@@ -104,7 +93,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         // Main Object
         OrderRequest orderRequest = new OrderRequest();
-        orderRequest.setIntent("CAPTURE");
+        orderRequest.setIntent(Constant.INTENT_CAPTURE);
         orderRequest.setPurchaseUnits(Collections.singletonList(purchaseUnit));
         orderRequest.setPaymentSource(paymentSource);
 		
@@ -126,12 +115,13 @@ public class PaymentServiceImpl implements PaymentService {
  		headers.setContentType(MediaType.APPLICATION_JSON);
 
  		String uuid = UUID.randomUUID().toString();
- 		headers.add("PayPal-Request-Id", uuid);
+ 		headers.add(Constant.PAYPAL_REQUEST_ID, uuid);
  		
  		// Prepare HttpRequest
  		HttpRequest httpRequest = new HttpRequest();
  		httpRequest.setHttpMethod(HttpMethod.POST);
- 		httpRequest.setUrl("https://api-m.sandbox.paypal.com/v2/checkout/orders");
+ 		
+		httpRequest.setUrl(createOrderUrl);
  		httpRequest.setHeaders(headers);
  		httpRequest.setBody(reqJson);
         

@@ -18,5 +18,4 @@ public class Amount {
 
     private String value;
 
-    private Breakdown breakdown;
 }
