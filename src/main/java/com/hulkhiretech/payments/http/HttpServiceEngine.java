@@ -16,6 +16,7 @@ public class HttpServiceEngine {
 	
 
 	public ResponseEntity<String> makeHttpCall(HttpRequest httpRequest)	{	
+		log.debug("Preparing to make Http call in HttpServiceEngine||httpRequest: {}", httpRequest);
 		
 		log.info("Making Http call in HttpServiceEngine");
 		

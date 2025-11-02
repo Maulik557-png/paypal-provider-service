@@ -6,7 +6,10 @@ import lombok.Data;
 public class CreateOrderReq {
 	
 	private String currencyCode;
+	
 	private double amount;
+	
 	private String cancelUrl;
+	
 	private String returnUrl;
 }
