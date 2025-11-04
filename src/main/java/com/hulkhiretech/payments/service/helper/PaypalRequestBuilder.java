@@ -1,0 +1,123 @@
+package com.hulkhiretech.payments.service.helper;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+
+import com.hulkhiretech.payments.constant.Constant;
+import com.hulkhiretech.payments.dto.Amount;
+import com.hulkhiretech.payments.dto.ExperienceContext;
+import com.hulkhiretech.payments.dto.OrderRequest;
+import com.hulkhiretech.payments.dto.PaymentSource;
+import com.hulkhiretech.payments.dto.Paypal;
+import com.hulkhiretech.payments.dto.PurchaseUnit;
+import com.hulkhiretech.payments.http.HttpRequest;
+import com.hulkhiretech.payments.pojo.CreateOrderReq;
+import com.hulkhiretech.payments.util.JsonUtil;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class PaypalRequestBuilder {
+	
+	private final JsonUtil jsonUtil;
+	
+	@Value("${paypal.create.order.url}")
+	private String createOrderUrl;
+	
+	@Value("${paypal.client.id}")
+	private String clientID;
+
+	@Value("${paypal.client.secret}")
+	private String clientSecret;
+
+	@Value("${paypal.outh.url}")
+	private String oauthUrl;
+	
+	public HttpRequest prepareTokenRequest() {
+		HttpHeaders headers = new HttpHeaders();
+
+		headers.setBasicAuth(clientID, clientSecret);
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();  
+		formData.add(Constant.GRANT_TYPE, Constant.CLIENT_CREDENTIALS);
+		
+		HttpRequest httpRequest = new HttpRequest();
+		httpRequest.setHttpMethod(HttpMethod.POST);
+		httpRequest.setUrl(oauthUrl);
+		httpRequest.setHeaders(headers);
+		httpRequest.setBody(formData);
+		return httpRequest;
+	}
+	
+	public HttpRequest prepareCreateOrderRequest(CreateOrderReq createOrderReq, String accessToken) {
+		// Amount
+        Amount amount = new Amount();
+        amount.setCurrencyCode(createOrderReq.getCurrencyCode());
+		amount.setValue(String.format(Constant.TWO_DECIMAL_FORMAT, createOrderReq.getAmount()));
+
+        // Purchase Unit
+        PurchaseUnit purchaseUnit = new PurchaseUnit();
+        String timestamp = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now());
+        int randomNum = ThreadLocalRandom.current().nextInt(1000, 9999);
+        String invoiceId = "INV-" + timestamp + "-" + randomNum;
+        purchaseUnit.setInvoiceId(invoiceId);
+        purchaseUnit.setAmount(amount);
+
+        // Experience Context
+        ExperienceContext context = new ExperienceContext();
+        context.setPaymentMethodPreference(Constant.PAYMENT_PREFERENEC_IMMEDIATE_PAYMENT_REQUIRED);
+        context.setLandingPage(Constant.LANDING_PAGE_LOGIN);
+        context.setShippingPreference(Constant.SHIPPING_PREFERENCE_NO_SHIPPING);
+        context.setUserAction(Constant.USER_ACTION_PAY_NOW);
+        context.setReturnUrl(createOrderReq.getReturnUrl());
+        context.setCancelUrl(createOrderReq.getCancelUrl());
+
+        // Payment Source
+        Paypal paypal = new Paypal();
+        paypal.setExperienceContext(context);
+
+        PaymentSource paymentSource = new PaymentSource();
+        paymentSource.setPaypal(paypal);
+
+        // Main Object
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.setIntent(Constant.INTENT_CAPTURE);
+        orderRequest.setPurchaseUnits(Collections.singletonList(purchaseUnit));
+        orderRequest.setPaymentSource(paymentSource);
+		
+        log.info("OrderRequest object created: {}", orderRequest);
+        
+        String reqJson = jsonUtil.toJson(orderRequest);
+		log.info("Create Order Request JSON: {}", reqJson);
+
+        // Prepare headers
+ 		HttpHeaders headers = new HttpHeaders();
+ 		headers.setBearerAuth(accessToken);		
+ 		headers.setContentType(MediaType.APPLICATION_JSON);
+
+ 		String uuid = UUID.randomUUID().toString();
+ 		headers.add(Constant.PAYPAL_REQUEST_ID, uuid);
+ 		
+ 		// Prepare HttpRequest
+ 		HttpRequest httpRequest = new HttpRequest();
+ 		httpRequest.setHttpMethod(HttpMethod.POST);
+		httpRequest.setUrl(createOrderUrl);
+ 		httpRequest.setHeaders(headers);
+ 		httpRequest.setBody(reqJson);
+		return httpRequest;
+	}
+}
