@@ -7,7 +7,7 @@ public class CreateOrderReq {
 	
 	private String currencyCode;
 	
-	private double amount;
+	private Double amount;
 	
 	private String cancelUrl;
 	

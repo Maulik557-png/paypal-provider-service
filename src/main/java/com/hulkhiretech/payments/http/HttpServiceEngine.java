@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 public class HttpServiceEngine {
 
 	private final RestClient restClient;
-	
 
 	public ResponseEntity<String> makeHttpCall(HttpRequest httpRequest)	{	
 		log.debug("Preparing to make Http call in HttpServiceEngine||httpRequest: {}", httpRequest);

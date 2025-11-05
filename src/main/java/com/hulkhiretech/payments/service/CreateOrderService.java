@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CreateOrderService {
 
+	private final PaymentValidator paymentValidator;
+	
 	private final HttpServiceEngine httpServiceEngine;
 
 	private final PaypalRequestBuilder paypalRequestBuilder;
@@ -25,6 +27,11 @@ public class CreateOrderService {
 	private final PaypalResponseMapper paypalResponseMapper;
 	
 	public OrderResponse createOrder(CreateOrderReq createOrderReq, String accessToken) {
+		log.info("CreateOrderService createOrder method called with CreateOrderReq: {}", createOrderReq);
+		
+		paymentValidator.validateCreateOrderRequest(createOrderReq);
+		log.info("CreateOrderReq validated successfully: {}", createOrderReq);
+		
 		HttpRequest httpRequest = paypalRequestBuilder.prepareCreateOrderRequest(createOrderReq, accessToken);
 		log.info("Create Order HttpRequest prepared: {}", httpRequest);
 

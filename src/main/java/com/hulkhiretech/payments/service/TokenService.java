@@ -17,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class TokenService {
 
+	private final PaymentValidator paymentValidator;
+	
 	private final HttpServiceEngine httpServiceEngine; 
 	
 	private final PaypalRequestBuilder paypalRequestBuilder;
@@ -47,6 +49,9 @@ public class TokenService {
 		log.info("HTTP Response from HttpServiceEngine: {}", response);
 		
 		PaypalOAuthToken token = paypalResponseMapper.prepareTokenResponse(response);
+		
+		paymentValidator.validateAccessToken(token.getAccessToken());
+		log.info("Access Token validated successfully");
 		
 		accessToken = token.getAccessToken();
 		log.info("Access Token retrived accessToken: {}", accessToken);
