@@ -30,7 +30,7 @@ public class PaymentServiceImpl implements PaymentService {
         OrderResponse orderResponse = createOrderService.createOrder(createOrderReq, accessToken);
 		log.info("OrderResponse received from createOrder method: {}", orderResponse);
         
-		// Success/Failure/TimeOut - Proper response handling
+		// TODO TimeOut handling using Circuit Breaker pattern 
 		
 		log.info("Order created successfully in PaymentServiceImpl");
 		return orderResponse;

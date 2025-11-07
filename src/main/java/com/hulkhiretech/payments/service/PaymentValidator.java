@@ -3,16 +3,20 @@ package com.hulkhiretech.payments.service;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import com.hulkhiretech.payments.constant.Constant;
 import com.hulkhiretech.payments.constant.ErrorCodeEnum;
 import com.hulkhiretech.payments.exception.PaypalProviderException;
+import com.hulkhiretech.payments.paypal.res.PaypalOrder;
 import com.hulkhiretech.payments.pojo.CreateOrderReq;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class PaymentValidator {
-	
+
 	/**
 	 * Validates the access token.
 	 * 
@@ -83,5 +87,22 @@ public class PaymentValidator {
 					ErrorCodeEnum.INVALID_CANCEL_URL.getErrorMessage(),
 					HttpStatus.BAD_REQUEST);
 		}
+	}
+	
+	/**
+	 * Validates the PayPal order response.
+	 * 
+	 * @param paypalOrder the PayPal order response to validate
+	 * @return true if the response is valid, false otherwise
+	 */
+	public boolean validateCreateOrderResponse(PaypalOrder paypalOrder) {
+		log.info("Validating OrderResponse: {}", paypalOrder);
+		
+		return paypalOrder != null
+				&& paypalOrder.getId() != null
+				&& !paypalOrder.getId().isBlank()
+				&& Constant.PAYER_ACTION_REQUIRED.equalsIgnoreCase(paypalOrder.getStatus())
+				&& paypalOrder.getLinks() != null
+				&& !paypalOrder.getLinks().isEmpty();
 	}
 }

@@ -1,6 +1,7 @@
-package com.hulkhiretech.payments.dto;
+package com.hulkhiretech.payments.paypal.req;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,8 +11,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PaymentSource {
+public class Amount {
 	
-    private Paypal paypal;
-    
+    @JsonProperty("currency_code")
+    private String currencyCode;
+
+    private String value;
+
 }

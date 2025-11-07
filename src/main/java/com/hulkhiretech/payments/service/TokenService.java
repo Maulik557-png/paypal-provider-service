@@ -12,6 +12,9 @@ import com.hulkhiretech.payments.service.helper.PaypalResponseMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Service class to handle token retrieval and caching.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor

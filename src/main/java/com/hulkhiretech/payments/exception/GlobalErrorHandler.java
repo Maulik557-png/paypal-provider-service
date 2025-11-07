@@ -10,8 +10,11 @@ import com.hulkhiretech.payments.pojo.ErrorResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
-@RestControllerAdvice
+/**
+ * Global error handler to manage exceptions across the application.
+ */
 @Slf4j
+@RestControllerAdvice
 public class GlobalErrorHandler {
 	
 	@ExceptionHandler(PaypalProviderException.class)
