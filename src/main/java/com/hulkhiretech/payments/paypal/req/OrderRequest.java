@@ -1,4 +1,4 @@
-package com.hulkhiretech.payments.dto;
+package com.hulkhiretech.payments.paypal.req;
 
 import java.util.List;
 

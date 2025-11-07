@@ -15,19 +15,22 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.hulkhiretech.payments.constant.Constant;
-import com.hulkhiretech.payments.dto.Amount;
-import com.hulkhiretech.payments.dto.ExperienceContext;
-import com.hulkhiretech.payments.dto.OrderRequest;
-import com.hulkhiretech.payments.dto.PaymentSource;
-import com.hulkhiretech.payments.dto.Paypal;
-import com.hulkhiretech.payments.dto.PurchaseUnit;
 import com.hulkhiretech.payments.http.HttpRequest;
+import com.hulkhiretech.payments.paypal.req.Amount;
+import com.hulkhiretech.payments.paypal.req.ExperienceContext;
+import com.hulkhiretech.payments.paypal.req.OrderRequest;
+import com.hulkhiretech.payments.paypal.req.PaymentSource;
+import com.hulkhiretech.payments.paypal.req.Paypal;
+import com.hulkhiretech.payments.paypal.req.PurchaseUnit;
 import com.hulkhiretech.payments.pojo.CreateOrderReq;
 import com.hulkhiretech.payments.util.JsonUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Builder class to prepare HttpRequest objects for PayPal API calls.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -47,6 +50,11 @@ public class PaypalRequestBuilder {
 	@Value("${paypal.outh.url}")
 	private String oauthUrl;
 	
+	/**
+	 * Prepares the HttpRequest for obtaining an OAuth token from PayPal.
+	 * 
+	 * @return the prepared HttpRequest
+	 */
 	public HttpRequest prepareTokenRequest() {
 		HttpHeaders headers = new HttpHeaders();
 
@@ -63,11 +71,18 @@ public class PaypalRequestBuilder {
 		return httpRequest;
 	}
 	
+	/**
+	 * Prepares the HttpRequest for creating an order with PayPal.
+	 * 
+	 * @param createOrderReq the CreateOrderReq object containing order details
+	 * @param accessToken    the access token for authentication
+	 * @return the prepared HttpRequest
+	 */
 	public HttpRequest prepareCreateOrderRequest(CreateOrderReq createOrderReq, String accessToken) {
 		// Amount
         Amount amount = new Amount();
         amount.setCurrencyCode(createOrderReq.getCurrencyCode());
-		amount.setValue(String.format(Constant.TWO_DECIMAL_FORMAT, createOrderReq.getAmount()));
+        amount.setValue(String.format(Constant.TWO_DECIMAL_FORMAT, createOrderReq.getAmount()));
 
         // Purchase Unit
         PurchaseUnit purchaseUnit = new PurchaseUnit();

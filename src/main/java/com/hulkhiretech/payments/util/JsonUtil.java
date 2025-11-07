@@ -28,8 +28,8 @@ public class JsonUtil {
     }
 
     /**
-     * Converts a JSON string to a Java object of specified class type.
-     */
+	 * Converts a JSON string to a Java object of the specified class.
+	 */
     public <T> T fromJson(String json, Class<T> clazz) {
         try {
             return objectMapper.readValue(json, clazz);

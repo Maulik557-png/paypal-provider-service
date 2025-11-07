@@ -1,4 +1,4 @@
-package com.hulkhiretech.payments.dto;
+package com.hulkhiretech.payments.paypal.req;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,8 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Paypal {
+public class PurchaseUnit {
 
-    @JsonProperty("experience_context")
-    private ExperienceContext experienceContext;
+    @JsonProperty("invoice_id")
+    private String invoiceId;
+
+    private Amount amount;
 }
