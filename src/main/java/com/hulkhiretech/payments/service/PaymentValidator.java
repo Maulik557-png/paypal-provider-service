@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import com.hulkhiretech.payments.constant.Constant;
 import com.hulkhiretech.payments.constant.ErrorCodeEnum;
 import com.hulkhiretech.payments.exception.PaypalProviderException;
+import com.hulkhiretech.payments.http.HttpRequest;
 import com.hulkhiretech.payments.paypal.res.PaypalOrder;
 import com.hulkhiretech.payments.pojo.CreateOrderReq;
 
@@ -46,7 +47,7 @@ public class PaymentValidator {
 	 * @param createOrderReq the CreateOrderReq object to validate
 	 * @throws PaypalProviderException if validation fails
 	 */
-	public void validateCreateOrderRequest(CreateOrderReq createOrderReq) {
+	public void validateCreateOrderRequest(CreateOrderReq createOrderReq, HttpRequest httpRequest) {
 		log.info("Validating CreateOrderReq: {}", createOrderReq);
 		
 		if(createOrderReq == null) {
@@ -83,6 +84,46 @@ public class PaymentValidator {
 			throw new PaypalProviderException(
 					ErrorCodeEnum.INVALID_CANCEL_URL.getErrorCode(),
 					ErrorCodeEnum.INVALID_CANCEL_URL.getErrorMessage(),
+					HttpStatus.BAD_REQUEST);
+		}
+		
+		if(httpRequest == null) {
+			log.error("HttpRequest object is null");
+			throw new PaypalProviderException(
+					ErrorCodeEnum.INVALID_REQUEST.getErrorCode(),
+					ErrorCodeEnum.INVALID_REQUEST.getErrorMessage(),
+					HttpStatus.BAD_REQUEST);
+		}
+		
+		if(httpRequest.getBody() == null) {
+			log.error("HttpRequest body is null or empty");
+			throw new PaypalProviderException(
+					ErrorCodeEnum.INVALID_REQUEST.getErrorCode(),
+					ErrorCodeEnum.INVALID_REQUEST.getErrorMessage(),
+					HttpStatus.BAD_REQUEST);
+		}
+		
+		if(httpRequest.getHeaders() == null || httpRequest.getHeaders().isEmpty()) {
+			log.error("HttpRequest headers are null or empty");
+			throw new PaypalProviderException(
+					ErrorCodeEnum.INVALID_REQUEST.getErrorCode(),
+					ErrorCodeEnum.INVALID_REQUEST.getErrorMessage(),
+					HttpStatus.BAD_REQUEST);
+		}
+		
+		if(httpRequest.getUrl() == null || httpRequest.getUrl().isBlank()) {
+			log.error("HttpRequest URL is null or empty");
+			throw new PaypalProviderException(
+					ErrorCodeEnum.INVALID_REQUEST.getErrorCode(),
+					ErrorCodeEnum.INVALID_REQUEST.getErrorMessage(),
+					HttpStatus.BAD_REQUEST);
+		}
+		
+		if(httpRequest.getHttpMethod() == null) {
+			log.error("HttpRequest HTTP method is null");
+			throw new PaypalProviderException(
+					ErrorCodeEnum.INVALID_REQUEST.getErrorCode(),
+					ErrorCodeEnum.INVALID_REQUEST.getErrorMessage(),
 					HttpStatus.BAD_REQUEST);
 		}
 	}
