@@ -1,5 +1,6 @@
 package com.hulkhiretech.payments.controller;
 
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,7 +27,17 @@ public class PaymentController {
 		log.info("Creating order in PayPal order service");
 		OrderResponse response = paymentService.createOrder(createOrderReq);
 		log.info("Order creation response from service response: {}", response);
+		
+		response.getOrderId();
 
+		return response;
+	}
+	
+	@PostMapping("/payments/orders/{orderId}/capture")
+	public String captureOrder(@PathVariable String orderId) {
+		log.info("Capture order request received in PaymentController||orderId: {}", orderId);
+		
+		String response = paymentService.captureOrder(orderId);
 		return response;
 	}
 }
