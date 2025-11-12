@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class PaypalRequestBuilder {
-	
+
 	private final JsonUtil jsonUtil;
 	
 	@Value("${paypal.create.order.url}")
@@ -49,6 +49,14 @@ public class PaypalRequestBuilder {
 
 	@Value("${paypal.outh.url}")
 	private String oauthUrl;
+	
+	@Value("${paypal.capture.order.url}")
+	private String captureOrderUrlTemplate;
+	
+	@Value("${paypal.show.order.url}")
+	private String showOrderUrlTemplate;
+	
+	private static final String ORDER_ID_REF = "{orderId}";
 	
 	/**
 	 * Prepares the HttpRequest for obtaining an OAuth token from PayPal.
@@ -86,9 +94,9 @@ public class PaypalRequestBuilder {
 
         // Purchase Unit
         PurchaseUnit purchaseUnit = new PurchaseUnit();
-        String timestamp = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now());
+        String timestamp = DateTimeFormatter.ofPattern(Constant.YYYY_MM_DD_HHMMSS).format(LocalDateTime.now());
         int randomNum = ThreadLocalRandom.current().nextInt(1000, 9999);
-        String invoiceId = "INV-" + timestamp + "-" + randomNum;
+        String invoiceId = Constant.INVOICE_TEMPLATE + timestamp + "-" + randomNum;
         purchaseUnit.setInvoiceId(invoiceId);
         purchaseUnit.setAmount(amount);
 
@@ -133,6 +141,50 @@ public class PaypalRequestBuilder {
 		httpRequest.setUrl(createOrderUrl);
  		httpRequest.setHeaders(headers);
  		httpRequest.setBody(reqJson);
+		return httpRequest;
+	}
+	
+	public HttpRequest prepareShowOrderRequest(String orderId, String accessToken) {
+		log.info("Preparing HttpRequest for show order||orderId: {}", orderId);
+		
+		// Prepare headers
+  		HttpHeaders headers = new HttpHeaders();
+  		headers.setBearerAuth(accessToken);		
+  		headers.setContentType(MediaType.APPLICATION_JSON);
+
+  		// Prepare HttpRequest
+  		HttpRequest httpRequest = new HttpRequest();
+  		httpRequest.setHttpMethod(HttpMethod.GET);
+		String showOrderUrl = showOrderUrlTemplate.replace(ORDER_ID_REF, orderId);
+		httpRequest.setUrl(showOrderUrl);
+  		httpRequest.setHeaders(headers);
+  		httpRequest.setBody(Constant.NO_BODY);		// no body for show order request
+  		
+  		log.info("HttpRequest prepared for show order: {}", httpRequest);
+		return httpRequest;
+	}
+	
+	public HttpRequest prepareCaptureOrderRequest(String orderId, String accessToken) {
+		log.info("Preparing HttpRequest for capture order||orderId: {}", orderId);
+		
+		// Prepare headers
+  		HttpHeaders headers = new HttpHeaders();
+  		headers.setBearerAuth(accessToken);		
+  		headers.setContentType(MediaType.APPLICATION_JSON);
+
+  		String uuid = UUID.randomUUID().toString();
+  		log.info("Generated UUID for PayPal-Request-Id header: {}", uuid);
+  		headers.add(Constant.PAYPAL_REQUEST_ID, uuid);
+  		
+  		// Prepare HttpRequest
+  		HttpRequest httpRequest = new HttpRequest();
+  		httpRequest.setHttpMethod(HttpMethod.POST);
+		String captureOrderUrl = captureOrderUrlTemplate.replace(ORDER_ID_REF, orderId);
+		httpRequest.setUrl(captureOrderUrl);
+  		httpRequest.setHeaders(headers);
+  		httpRequest.setBody(Constant.NO_BODY);		// no body for capture order request
+  		
+  		log.info("HttpRequest prepared for capture order: {}", httpRequest);
 		return httpRequest;
 	}
 }

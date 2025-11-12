@@ -4,6 +4,9 @@ import org.springframework.http.HttpStatus;
 
 import lombok.Getter;
 
+/**
+ * Custom exception class for PayPal provider errors.
+ */
 @Getter
 public class PaypalProviderException extends RuntimeException {
 

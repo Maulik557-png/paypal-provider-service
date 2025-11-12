@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.hulkhiretech.payments.constant.ErrorCodeEnum;
 import com.hulkhiretech.payments.pojo.ErrorResponse;
@@ -27,6 +28,18 @@ public class GlobalErrorHandler {
 		);
 
 		return new ResponseEntity<>(errorResponse, ex.getHttpStatus());
+	}
+	
+	@ExceptionHandler(NoResourceFoundException.class)
+	public ResponseEntity<ErrorResponse> handleNoResourceFoundException(
+			NoResourceFoundException ex) {
+		log.error("Handling NoResourceFoundException: {}", ex.getMessage(), ex);
+		
+		ErrorResponse error = new ErrorResponse(
+				ErrorCodeEnum.RESOURCE_NOT_FOUND.getErrorCode(), 
+				ErrorCodeEnum.RESOURCE_NOT_FOUND.getErrorMessage());
+		
+		return new ResponseEntity<>(error, HttpStatus.NOT_FOUND); 
 	}
 	
 	@ExceptionHandler(Exception.class)

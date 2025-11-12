@@ -39,11 +39,11 @@ public class CreateOrderService {
 	public OrderResponse createOrder(CreateOrderReq createOrderReq, String accessToken) {
 		log.info("CreateOrderService createOrder method called with CreateOrderReq: {}", createOrderReq);
 		
-		paymentValidator.validateCreateOrderRequest(createOrderReq);
-		log.info("CreateOrderReq validated successfully: {}", createOrderReq);
-		
 		HttpRequest httpRequest = paypalRequestBuilder.prepareCreateOrderRequest(createOrderReq, accessToken);
 		log.info("Create Order HttpRequest prepared: {}", httpRequest);
+		
+		paymentValidator.validateCreateOrderRequest(createOrderReq, httpRequest);
+		log.info("CreateOrderReq validated successfully: {}", createOrderReq);
 
 		ResponseEntity<String> response = httpServiceEngine.makeHttpCall(httpRequest);
 		log.info("HTTP Response from HttpServiceEngine: {}", response);
