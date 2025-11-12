@@ -18,7 +18,9 @@ public enum ErrorCodeEnum {
 	PAYPAL_SERVICE_UNAVAILABLE("30007", "Paypal service is currently unavailable. Please try again later."), 
 	PAYPAL_ERROR("30008", "<Error from Paypal>: %s"),
 	PAYPAL_UNKNOWN_ERROR("30009", "An unknown error occurred while processing the Paypal response"),
-	PAYER_ACTION_REQUIRED("30010", "Payer action is required to complete the payment.");
+	PAYER_ACTION_REQUIRED("30010", "Payer action is required to complete the payment."), 
+	INVALID_ORDER_ID("30011", "Order ID is a required field and cannot be null"),
+	RESOURCE_NOT_FOUND("30012", "The requested resource was not found.");
 	
 	private final String errorCode;
 	private final String errorMessage;	

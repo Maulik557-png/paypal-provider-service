@@ -5,11 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class PaypalShowOrder {
+public class PaypalOrderDetails {
 
-    private String id;
+	@JsonProperty("id")
+    private String orderId;
     private String intent;
-    private String status;
+    @JsonProperty("status")
+    private String paypalStatus;
+    
     @JsonProperty("create_time")
     private String createTime;
 }

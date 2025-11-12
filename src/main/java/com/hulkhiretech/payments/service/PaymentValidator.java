@@ -6,8 +6,10 @@ import org.springframework.stereotype.Service;
 import com.hulkhiretech.payments.constant.Constant;
 import com.hulkhiretech.payments.constant.ErrorCodeEnum;
 import com.hulkhiretech.payments.exception.PaypalProviderException;
+import com.hulkhiretech.payments.http.HttpRequest;
 import com.hulkhiretech.payments.paypal.res.PaypalOrder;
 import com.hulkhiretech.payments.pojo.CreateOrderReq;
+import com.hulkhiretech.payments.pojo.OrderResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,51 +45,108 @@ public class PaymentValidator {
 	}
 	
 	/**
-	 * Validates the CreateOrderReq object.
+	 * Validates the create order request.
 	 * 
-	 * @param createOrderReq the CreateOrderReq object to validate
+	 * @param createOrderReq the CreateOrderReq to validate
+	 * @param httpRequest    the HttpRequest to validate
 	 * @throws PaypalProviderException if validation fails
 	 */
-	public void validateCreateOrderRequest(CreateOrderReq createOrderReq) {
-		log.info("Validating CreateOrderReq: {}", createOrderReq);
-		
-		if(createOrderReq == null) {
-			log.error("Trying to validate a null CreateOrderReq object");
-			throw new PaypalProviderException(
-					ErrorCodeEnum.INVALID_REQUEST.getErrorCode(),
-					ErrorCodeEnum.INVALID_REQUEST.getErrorMessage(),
-					HttpStatus.BAD_REQUEST);
-		}
-		if(createOrderReq.getCurrencyCode() == null || createOrderReq.getCurrencyCode().isBlank()) {
-			log.error("Currency code is a required field and cannot be null");
-			throw new PaypalProviderException(
-					ErrorCodeEnum.INVALID_CURRENCY_CODE.getErrorCode(), 
-					ErrorCodeEnum.INVALID_CURRENCY_CODE.getErrorMessage(),
-					HttpStatus.NOT_FOUND);
-		}
+	public void validateCreateOrderRequest(CreateOrderReq createOrderReq, HttpRequest httpRequest) {
+	    log.info("Validating CreateOrderReq: {}", createOrderReq);
 
-		if(createOrderReq.getAmount() == null || createOrderReq.getAmount() <= 0) {
-			log.error("Amount must be a valid value greater than zero");
-			throw new PaypalProviderException(
-					ErrorCodeEnum.INVALID_AMOUNT.getErrorCode(),
-					ErrorCodeEnum.INVALID_AMOUNT.getErrorMessage(),
-					HttpStatus.BAD_REQUEST);
-		}
-		if(createOrderReq.getReturnUrl() == null || createOrderReq.getReturnUrl().isBlank()) {
-			log.error("Return URL is a required field and cannot be null");
-			throw new PaypalProviderException(
-					ErrorCodeEnum.INVALID_RETURN_URL.getErrorCode(), 
-					ErrorCodeEnum.INVALID_RETURN_URL.getErrorMessage(),
-					HttpStatus.BAD_REQUEST);
-		}
-		if(createOrderReq.getCancelUrl() == null || createOrderReq.getCancelUrl().isBlank()) {
-			log.error("Cancel URL is a required field and cannot be null");
-			throw new PaypalProviderException(
-					ErrorCodeEnum.INVALID_CANCEL_URL.getErrorCode(),
-					ErrorCodeEnum.INVALID_CANCEL_URL.getErrorMessage(),
-					HttpStatus.BAD_REQUEST);
-		}
+	    validateObjectNotNull(createOrderReq, "CreateOrderReq");
+	    validateField(createOrderReq.getCurrencyCode(), ErrorCodeEnum.INVALID_CURRENCY_CODE, "Currency code");
+	    validateAmount(createOrderReq.getAmount());
+	    validateField(createOrderReq.getReturnUrl(), ErrorCodeEnum.INVALID_RETURN_URL, "Return URL");
+	    validateField(createOrderReq.getCancelUrl(), ErrorCodeEnum.INVALID_CANCEL_URL, "Cancel URL");
+
+	    validateObjectNotNull(httpRequest, "HttpRequest");
+	    validateHttpRequest(httpRequest);
 	}
+	
+	/**
+	 * Validates the HttpRequest.
+	 * 
+	 * @param httpRequest the HttpRequest to validate
+	 * @throws PaypalProviderException if validation fails
+	 */
+	private void validateHttpRequest(HttpRequest httpRequest) {
+	    // body
+	    if (httpRequest.getBody() == null) {
+	        log.error("HttpRequest body is null");
+	        throw new PaypalProviderException(
+	                ErrorCodeEnum.INVALID_REQUEST.getErrorCode(),
+	                ErrorCodeEnum.INVALID_REQUEST.getErrorMessage(),
+	                HttpStatus.BAD_REQUEST);
+	    }
+
+	    // headers
+	    if (httpRequest.getHeaders() == null || httpRequest.getHeaders().isEmpty()) {
+	        log.error("HttpRequest headers are null or empty");
+	        throw new PaypalProviderException(
+	                ErrorCodeEnum.INVALID_REQUEST.getErrorCode(),
+	                ErrorCodeEnum.INVALID_REQUEST.getErrorMessage(),
+	                HttpStatus.BAD_REQUEST);
+	    }
+
+	    // url
+	    validateField(httpRequest.getUrl(), ErrorCodeEnum.INVALID_REQUEST, "HttpRequest URL");
+
+	    // http method
+	    validateObjectNotNull(httpRequest.getHttpMethod(), "HttpRequest HTTP method");
+	}
+	
+	/**
+	 * Validates that an object is not null.
+	 * 
+	 * @param obj       the object to validate
+	 * @param fieldName the name of the field being validated
+	 * @throws PaypalProviderException if the object is null
+	 */
+	private void validateObjectNotNull(Object obj, String fieldName) {
+	    if (obj == null) {
+	        log.error("{} is null", fieldName);
+	        throw new PaypalProviderException(
+	                ErrorCodeEnum.INVALID_REQUEST.getErrorCode(),
+	                ErrorCodeEnum.INVALID_REQUEST.getErrorMessage(),
+	                HttpStatus.BAD_REQUEST);
+	    }
+	}
+	
+	/**
+	 * Validates a string field.
+	 * 
+	 * @param fieldValue    the value of the field to validate
+	 * @param errorCodeEnum the error code enum to use for exceptions
+	 * @param fieldName     the name of the field being validated
+	 * @throws PaypalProviderException if the field is null or blank
+	 */
+	private void validateField(String fieldValue, ErrorCodeEnum errorCodeEnum, String fieldName) {
+	    if (fieldValue == null || fieldValue.isBlank()) {
+	        log.error("{} is a required field and cannot be null or blank", fieldName);
+	        throw new PaypalProviderException(
+	                errorCodeEnum.getErrorCode(),
+	                errorCodeEnum.getErrorMessage(),
+	                HttpStatus.BAD_REQUEST);
+	    }
+	}
+
+	/**
+	 * Validates the amount.
+	 * 
+	 * @param amount the amount to validate
+	 * @throws PaypalProviderException if the amount is null or less than or equal to zero
+	 */
+	private void validateAmount(Double amount) {
+	    if (amount == null || amount <= 0) {
+	        log.error("Amount must be a valid value greater than zero");
+	        throw new PaypalProviderException(
+	                ErrorCodeEnum.INVALID_AMOUNT.getErrorCode(),
+	                ErrorCodeEnum.INVALID_AMOUNT.getErrorMessage(),
+	                HttpStatus.BAD_REQUEST);
+	    }
+	}
+
 	
 	/**
 	 * Validates the PayPal order response.
@@ -104,5 +163,40 @@ public class PaymentValidator {
 				&& Constant.PAYER_ACTION_REQUIRED.equalsIgnoreCase(paypalOrder.getStatus())
 				&& paypalOrder.getLinks() != null
 				&& !paypalOrder.getLinks().isEmpty();
+	}
+	
+	/**
+	 * Validates the capture order request.
+	 * 
+	 * @param orderId the order ID to validate
+	 * @throws PaypalProviderException if validation fails
+	 */
+	public void validateCaptureOrderRequest(String orderId) {
+		log.info("Validating capture order request for orderId: {}", orderId);
+		
+		if(orderId == null || orderId.isBlank()) {
+			log.error("Order ID is a required field and cannot be null");
+			throw new PaypalProviderException(
+					ErrorCodeEnum.INVALID_ORDER_ID.getErrorCode(),
+					ErrorCodeEnum.INVALID_ORDER_ID.getErrorMessage(),
+					HttpStatus.BAD_REQUEST);
+		}
+	}
+	
+	/**
+	 * Validates the capture order response.
+	 * 
+	 * @param orderResponse the OrderResponse to validate
+	 * @return true if the response is valid, false otherwise
+	 */
+	public boolean validateCaptureOrderResponse(OrderResponse orderResponse) {
+		log.info("Validating capture order response: {}", orderResponse);
+		
+		return orderResponse != null 
+				&& orderResponse.getOrderId() != null
+				&& !orderResponse.getOrderId().isEmpty()
+				&& orderResponse.getPaypalStatus() != null
+				&& !orderResponse.getPaypalStatus().isEmpty()
+				&& orderResponse.getPaypalStatus().equalsIgnoreCase(Constant.COMPLETED);
 	}
 }

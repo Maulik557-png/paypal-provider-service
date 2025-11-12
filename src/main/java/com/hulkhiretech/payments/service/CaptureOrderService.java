@@ -1,17 +1,14 @@
 package com.hulkhiretech.payments.service;
 
-import java.util.UUID;
-
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.hulkhiretech.payments.constant.Constant;
 import com.hulkhiretech.payments.http.HttpRequest;
 import com.hulkhiretech.payments.http.HttpServiceEngine;
-import com.hulkhiretech.payments.paypal.res.PaypalShowOrder;
+import com.hulkhiretech.payments.paypal.res.PaypalOrder;
+import com.hulkhiretech.payments.pojo.OrderResponse;
+import com.hulkhiretech.payments.service.helper.PaypalRequestBuilder;
+import com.hulkhiretech.payments.service.helper.PaypalResponseMapper;
 import com.hulkhiretech.payments.util.JsonUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -21,76 +18,62 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class CaptureOrderService {
-	
-	private final HttpServiceEngine httpServiceEngine;
-	
+
 	private final JsonUtil jsonUtil;
-	
-	private static final String NO_BODY = "";
-	
-	public String showOrder(String orderId, String accessToken) {
+
+	private final PaymentValidator paymentValidator;
+
+	private final HttpServiceEngine httpServiceEngine;
+
+	private final PaypalRequestBuilder paypalRequestBuilder;
+
+	private final PaypalResponseMapper paypalResponseMapper;
+
+	/**
+	 * Shows the order details for the given orderId using the provided access token.
+	 * 
+	 * @param orderId     the ID of the order to be shown
+	 * @param accessToken the access token for authentication
+	 * @return the PaypalOrderDetails containing order information
+	 */
+	public PaypalOrder showOrder(String orderId, String accessToken) {
 		log.info("Showing order in CaptureOrderService||orderId: {}, accessToken: {}", orderId, accessToken);
-		
-		// Prepare headers
- 		HttpHeaders headers = new HttpHeaders();
- 		headers.setBearerAuth(accessToken);		
- 		headers.setContentType(MediaType.APPLICATION_JSON);
- 		
- 		// Prepare HttpRequest
- 		HttpRequest httpRequest = new HttpRequest();
- 		httpRequest.setHttpMethod(HttpMethod.GET);
-		httpRequest.setUrl("https://api-m.sandbox.paypal.com/v2/checkout/orders/" + orderId);
- 		httpRequest.setHeaders(headers);
- 		httpRequest.setBody(NO_BODY);		// no body for capture order request
- 		log.info("HttpRequest prepared for show order: {}", httpRequest);
- 		
- 		ResponseEntity<String> showOrderResponse = httpServiceEngine.makeHttpCall(httpRequest);
- 		log.info("Show order response received: {}", showOrderResponse);
-		
- 		PaypalShowOrder paypalShowOrder = jsonUtil.fromJson(showOrderResponse.getBody(), PaypalShowOrder.class);
- 		log.info("PaypalShowOrder object parsed from response: {}", paypalShowOrder);
- 		
- 		if(!"APPROVED".equalsIgnoreCase(paypalShowOrder.getStatus())) {
-			log.warn("Order is not in APPROVED status, cannot capture order. Current status: {}", paypalShowOrder.getStatus());
-			
-			// pass formatted json message to processing service
-			String paymentPending = jsonUtil.toJson(paypalShowOrder);
-			log.info("Warning message to be forwarded: {}", paymentPending);
-			
-			// TODO forward this message to processing service
-			return paymentPending;
-		}
- 		
- 		log.info("Show order completed in CaptureOrderService");
-		return paypalShowOrder.getStatus();
+
+		HttpRequest httpRequest = paypalRequestBuilder.prepareShowOrderRequest(orderId, accessToken);
+		log.info("Show Order HttpRequest prepared: {}", httpRequest);
+
+		ResponseEntity<String> showOrderResponse = httpServiceEngine.makeHttpCall(httpRequest);
+		log.info("Show order response received: {}", showOrderResponse);
+
+		PaypalOrder orderDetails = jsonUtil.fromJson(showOrderResponse.getBody(), PaypalOrder.class);
+		log.info("PaypalShowOrder object parsed from response: {}", orderDetails);
+
+		log.info("Paypal order status for orderId {}: {}", orderId, orderDetails.getStatus());
+		return orderDetails;
 	}
-	
-	public String captureOrder(String orderId, String accessToken) {
+
+	/**
+	 * Captures the order for the given orderId using the provided access token.
+	 * 
+	 * @param orderId     the ID of the order to be captured
+	 * @param accessToken the access token for authentication
+	 * @return the OrderResponse containing captured order details
+	 */
+	public OrderResponse captureOrder(String orderId, String accessToken) {
 		log.info("Capturing order in CaptureOrderService||orderId: {}, accessToken: {}", orderId, accessToken);
-		
-		// Prepare headers
- 		HttpHeaders headers = new HttpHeaders();
- 		headers.setBearerAuth(accessToken);		
- 		headers.setContentType(MediaType.APPLICATION_JSON);
 
- 		String uuid = UUID.randomUUID().toString();
- 		headers.add(Constant.PAYPAL_REQUEST_ID, uuid);
- 		
- 		// Prepare HttpRequest
- 		HttpRequest httpRequest = new HttpRequest();
- 		httpRequest.setHttpMethod(HttpMethod.POST);
-		httpRequest.setUrl("https://api-m.sandbox.paypal.com/v2/checkout/orders/" + orderId + "/capture");
- 		httpRequest.setHeaders(headers);
- 		httpRequest.setBody(NO_BODY);		// no body for capture order request
-		
-		// TODO Make HTTP call to capture order and handle response
- 		ResponseEntity<String> captureResponse = httpServiceEngine.makeHttpCall(httpRequest);
- 		log.info("Capture order response received: {}", captureResponse);
-		
-		// convert captureResponse to java object and return relevant info
-		
-		return captureResponse.getBody();
+		paymentValidator.validateCaptureOrderRequest(orderId);
+		log.info("Capture order request validated successfully for orderId: {}", orderId);
 
+		HttpRequest httpRequest = paypalRequestBuilder.prepareCaptureOrderRequest(orderId, accessToken);
+		log.info("Capture Order HttpRequest prepared: {}", httpRequest);
+
+		ResponseEntity<String> captureResponse = httpServiceEngine.makeHttpCall(httpRequest);
+		log.info("Capture order response received: {}", captureResponse);
+
+		OrderResponse orderResponse = paypalResponseMapper.handleCaptureResponse(captureResponse);
+		log.info("OrderResponse prepared from PaypalResponseMapper: {}", orderResponse); 		
+
+		return orderResponse;
 	}
-	
 }

@@ -9,6 +9,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
+/**
+ * Configuration class for application-wide beans.
+ */
 @Configuration
 public class AppConfig {
 	
