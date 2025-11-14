@@ -68,14 +68,14 @@ public class PaypalRequestBuilder {
 
 		headers.setBasicAuth(clientID, clientSecret);
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-		MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();  
-		formData.add(Constant.GRANT_TYPE, Constant.CLIENT_CREDENTIALS);
+		MultiValueMap<String, String> reqBody = new LinkedMultiValueMap<>();  
+		reqBody.add(Constant.GRANT_TYPE, Constant.CLIENT_CREDENTIALS);
 		
 		HttpRequest httpRequest = new HttpRequest();
 		httpRequest.setHttpMethod(HttpMethod.POST);
 		httpRequest.setUrl(oauthUrl);
 		httpRequest.setHeaders(headers);
-		httpRequest.setBody(formData);
+		httpRequest.setBody(reqBody);
 		return httpRequest;
 	}
 	
