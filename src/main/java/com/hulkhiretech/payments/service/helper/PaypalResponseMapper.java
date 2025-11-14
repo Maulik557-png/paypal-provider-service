@@ -54,7 +54,32 @@ public class PaypalResponseMapper {
 				"Failed to retrieve OAuth token from Paypal",	
 				HttpStatus.SERVICE_UNAVAILABLE);
 	}
+	
+	/**
+	 * Converts a PaypalOrder to an OrderResponse.
+	 *
+	 * @param paypalOrder the PayPal order
+	 * @return the corresponding OrderResponse
+	 */
+	public OrderResponse toCreateOrderResponse(PaypalOrder paypalOrder) {
+		log.info("Converting PaypalOrder to OrderResponse: {}", paypalOrder);
 
+		OrderResponse response = new OrderResponse();
+		response.setOrderId(paypalOrder.getId());
+		response.setPaypalStatus(paypalOrder.getStatus());
+
+		String redirectUrl = paypalOrder.getLinks().stream()
+				.filter(link -> "payer-action".equalsIgnoreCase(link.getRel()))
+				.map(PaypalLink::getHref)
+				.findFirst()
+				.orElse(null);
+
+		response.setRedirectUrl(redirectUrl);
+
+		log.info("Converted PaypalOrder to OrderResponse: {}", response);
+		return response;
+	}
+	
 	/**
 	 * Prepares an OrderResponse from the given PayPal response.
 	 *
@@ -73,21 +98,14 @@ public class PaypalResponseMapper {
 			paypalOrder = jsonUtil.fromJson(response.getBody(), PaypalOrder.class);
 			log.info("PaypalOrder object created: {}", paypalOrder);
 
+			OrderResponse orderResponse = toCreateOrderResponse(paypalOrder);
+			log.info("Converted OrderResponse: {}", orderResponse);
+
 			if(paymentValidator.validateCreateOrderResponse(paypalOrder)) {
-				OrderResponse orderResponse = new OrderResponse();
-				orderResponse.setOrderId(paypalOrder.getId());
-				orderResponse.setPaypalStatus(paypalOrder.getStatus());
-
-				String redirectUrl = paypalOrder.getLinks().stream()
-						.filter(link -> "payer-action".equalsIgnoreCase(link.getRel()))
-						.map(PaypalLink::getHref)
-						.findFirst()
-						.orElse(null);
-
-				orderResponse.setRedirectUrl(redirectUrl);
-
 				return orderResponse;
 			} 
+			
+			log.error("Order creation failed or incomplete details received. " + "orderResponse: {}", orderResponse);
 		}
 
 		// if 4xx or 5xx response from PayPal
@@ -116,24 +134,6 @@ public class PaypalResponseMapper {
 				HttpStatus.BAD_GATEWAY);
 	}
 
-
-	/**
-	 * Converts a PaypalOrder to an OrderResponse.
-	 *
-	 * @param paypalOrder the PayPal order
-	 * @return the corresponding OrderResponse
-	 */
-	public OrderResponse toOrderResponse(PaypalOrder paypalOrder) {
-		log.info("Converting PaypalOrder to OrderResponse: {}", paypalOrder);
-
-		OrderResponse response = new OrderResponse();
-		response.setOrderId(paypalOrder.getId());
-		response.setPaypalStatus(paypalOrder.getStatus());
-
-		log.info("Converted PaypalOrder to OrderResponse: {}", response);
-		return response;
-	}
-
 	/**
 	 * Prepares an OrderResponse for pending payment status.
 	 *
@@ -158,6 +158,23 @@ public class PaypalResponseMapper {
 	}
 	
 	/**
+	 * Converts a PaypalOrder to an OrderResponse.
+	 *
+	 * @param paypalOrder the PayPal order
+	 * @return the corresponding OrderResponse
+	 */
+	public OrderResponse toCaptureOrderResponse(PaypalOrder paypalOrder) {
+		log.info("Converting PaypalOrder to OrderResponse: {}", paypalOrder);
+
+		OrderResponse response = new OrderResponse();
+		response.setOrderId(paypalOrder.getId());
+		response.setPaypalStatus(paypalOrder.getStatus());
+
+		log.info("Converted PaypalOrder to OrderResponse: {}", response);
+		return response;
+	}
+	
+	/**
 	 * Handles the capture response from PayPal and converts it to an OrderResponse.
 	 *
 	 * @param httpResponse the HTTP response from PayPal
@@ -170,43 +187,34 @@ public class PaypalResponseMapper {
 
 		if(httpResponse.getStatusCode().is2xxSuccessful()) { //success
 
-			PaypalOrder paypalOrder = jsonUtil.fromJson(
-					httpResponse.getBody(), PaypalOrder.class);
+			PaypalOrder paypalOrder = jsonUtil.fromJson(httpResponse.getBody(), PaypalOrder.class);
 			log.info("Converted response body to PaypalOrder: {}", paypalOrder);
 
-			OrderResponse orderResponse = toOrderResponse(paypalOrder);
+			OrderResponse orderResponse = toCaptureOrderResponse(paypalOrder);
 			log.info("Converted OrderResponse: {}", orderResponse);
 
 			if(paymentValidator.validateCaptureOrderResponse(orderResponse)) {
 				return orderResponse;
 			}
 
-			log.error("Order creation failed or incomplete details received. "
-					+ "orderResponse: {}", orderResponse);
+			log.error("Order creation failed or incomplete details received. " + "orderResponse: {}", orderResponse);
 		}
 
 		// if 4xx or 5xx then proper error
-		if(httpResponse.getStatusCode().is4xxClientError() 
-				|| httpResponse.getStatusCode().is5xxServerError()) {
+		if(httpResponse.getStatusCode().is4xxClientError() || httpResponse.getStatusCode().is5xxServerError()) {
 			log.error("Received 4xx, 5xx error response from PayPal service");
 
-			PaypalErrorResponse paypalErrorRes = jsonUtil.fromJson(
-					httpResponse.getBody(), PaypalErrorResponse.class);
+			PaypalErrorResponse paypalErrorRes = jsonUtil.fromJson(httpResponse.getBody(), PaypalErrorResponse.class);
 			log.info("PayPal error response details: {}", paypalErrorRes);
 
 			String errorCode = ErrorCodeEnum.PAYPAL_ERROR.getErrorCode();
 			String errorMessage = PaypalErrorUtil.getResponseSummary(paypalErrorRes);
 			log.info("Generated PayPal error summary: {}", errorMessage);
 
-			throw new PaypalProviderException(
-					errorCode,
-					errorMessage,
-					HttpStatus.valueOf(
-							httpResponse.getStatusCode().value()));
+			throw new PaypalProviderException(errorCode, errorMessage, HttpStatus.valueOf(httpResponse.getStatusCode().value()));
 		}
 
-		log.error("Unexpected response from PayPal service. "
-				+ "httpResponse: {}", httpResponse);
+		log.error("Unexpected response from PayPal service. " + "httpResponse: {}", httpResponse);
 
 		throw new PaypalProviderException(
 				ErrorCodeEnum.PAYPAL_UNKNOWN_ERROR.getErrorCode(),
