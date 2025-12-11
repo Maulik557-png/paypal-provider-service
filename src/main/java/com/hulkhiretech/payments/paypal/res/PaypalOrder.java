@@ -11,9 +11,7 @@ import lombok.Data;
 public class PaypalOrder {
 	
 	private String id;
-	
     private String status;
-
     private List<PaypalLink> links;
 	
 }
