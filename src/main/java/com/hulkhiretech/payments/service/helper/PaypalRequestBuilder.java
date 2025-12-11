@@ -56,8 +56,6 @@ public class PaypalRequestBuilder {
 	@Value("${paypal.show.order.url}")
 	private String showOrderUrlTemplate;
 	
-	private static final String ORDER_ID_REF = "{orderId}";
-	
 	/**
 	 * Prepares the HttpRequest for obtaining an OAuth token from PayPal.
 	 * 
@@ -155,7 +153,7 @@ public class PaypalRequestBuilder {
   		// Prepare HttpRequest
   		HttpRequest httpRequest = new HttpRequest();
   		httpRequest.setHttpMethod(HttpMethod.GET);
-		String showOrderUrl = showOrderUrlTemplate.replace(ORDER_ID_REF, orderId);
+		String showOrderUrl = showOrderUrlTemplate.replace(Constant.ORDER_ID_REF, orderId);
 		httpRequest.setUrl(showOrderUrl);
   		httpRequest.setHeaders(headers);
   		httpRequest.setBody(Constant.NO_BODY);		// no body for show order request
@@ -179,7 +177,7 @@ public class PaypalRequestBuilder {
   		// Prepare HttpRequest
   		HttpRequest httpRequest = new HttpRequest();
   		httpRequest.setHttpMethod(HttpMethod.POST);
-		String captureOrderUrl = captureOrderUrlTemplate.replace(ORDER_ID_REF, orderId);
+		String captureOrderUrl = captureOrderUrlTemplate.replace(Constant.ORDER_ID_REF, orderId);
 		httpRequest.setUrl(captureOrderUrl);
   		httpRequest.setHeaders(headers);
   		httpRequest.setBody(Constant.NO_BODY);		// no body for capture order request

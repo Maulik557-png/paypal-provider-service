@@ -37,4 +37,5 @@ public class Constant {
 	
 	public static final String COMPLETED = "COMPLETED";
 	
+	public static final String ORDER_ID_REF = "{orderId}";
 }

@@ -65,14 +65,15 @@ public class PaymentServiceImpl implements PaymentService {
 
 		PaypalOrder orderStatus = captureOrderService.showOrder(orderId, accessToken);
 		log.info("Order details retrieved using showOrder: {}", orderStatus);
+		
+		if (Constant.COMPLETED.equalsIgnoreCase(orderStatus.getStatus())) {
+			log.info("Order status is already COMPLETED. No further capture needed. Current status: {}", orderStatus);
+			return paypalResponseMapper.completedPaymentResponse(orderStatus);
+		}
 
 		if (!Constant.APPROVED.equalsIgnoreCase(orderStatus.getStatus())) {
 			log.warn("Order status is not APPROVED. Current status: {}", orderStatus);
-
-			OrderResponse paymentPendingResponse = paypalResponseMapper.pendingPaymentResponse(orderStatus);
-			log.info("Order is not in APPROVED status. Returning pending payment response: {}", paymentPendingResponse);
-
-			return paymentPendingResponse;
+			return paypalResponseMapper.pendingPaymentResponse(orderStatus);
 		}
 
 		OrderResponse captureResponse = captureOrderService.captureOrder(orderId, accessToken);

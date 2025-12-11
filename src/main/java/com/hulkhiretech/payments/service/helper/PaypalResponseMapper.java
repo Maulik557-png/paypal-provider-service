@@ -133,7 +133,24 @@ public class PaypalResponseMapper {
 				ErrorCodeEnum.PAYPAL_UNKNOWN_ERROR.getErrorMessage(),	
 				HttpStatus.BAD_GATEWAY);
 	}
+	
+	/**
+	 * Prepares an OrderResponse for completed payment status.
+	 *
+	 * @param orderStatus the PayPal order details
+	 * @return the prepared OrderResponse indicating completed payment
+	 */
+	public OrderResponse completedPaymentResponse(PaypalOrder orderStatus) {
+		log.info("Evaluating PayPal order status: {}", orderStatus);
 
+		log.info("Order is already CAPTURED. Current status: {}", orderStatus);
+		OrderResponse alreadyCapturedResponse = new OrderResponse();
+		alreadyCapturedResponse.setOrderId(orderStatus.getId());
+		alreadyCapturedResponse.setPaypalStatus(orderStatus.getStatus());
+		log.info("Order is in COMPLETED status. Returning completed payment response: {}", alreadyCapturedResponse);
+		return alreadyCapturedResponse;
+	}
+	
 	/**
 	 * Prepares an OrderResponse for pending payment status.
 	 *
