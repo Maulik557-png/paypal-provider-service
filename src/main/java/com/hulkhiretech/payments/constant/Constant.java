@@ -38,4 +38,8 @@ public class Constant {
 	public static final String COMPLETED = "COMPLETED";
 	
 	public static final String ORDER_ID_REF = "{orderId}";
+	
+	public static final String PAYPAL_ACCESS_TOKEN = "PAYPAL_ACCESS_TOKEN";
+	
+	public static final int REDIS_TOKEN_EXPIRY_BUFFER_TIME = 300;	// 5 minutes
 }
