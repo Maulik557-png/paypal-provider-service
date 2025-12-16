@@ -8,7 +8,8 @@
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder> 
-            <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-}] [%X{spanId:-}] [%thread] [${springAppName}] %logger - %msg%n</pattern>
+            <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS, Asia/Kolkata} [%X{traceId:-}] [%X{spanId:-}] [%thread] [${springAppName}] %logger - %msg%n</pattern>
+
         </encoder>
     </appender>   
 
@@ -20,7 +21,8 @@
             <maxHistory>20</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-}] [%X{spanId:-}] [%thread] [${springAppName}] %logger - %msg%n</pattern>
+            <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS, Asia/Kolkata} [%X{traceId:-}] [%X{spanId:-}] [%thread] [${springAppName}] %logger - %msg%n</pattern>
+
         </encoder>
     </appender>
 

@@ -37,7 +37,7 @@
 			<id>dev</id>
 			<properties>
 				<spring.profiles.active>dev</spring.profiles.active>
-				<logging.path>/var/lib/tomcat/logs/cpt/paypal-provider-service</logging.path>
+				<logging.path>/home/ec2-user/logs/paypal-provider-service/paypal-provider-service.log</logging.path>
 			</properties>
 		</profile>
 		<profile>
