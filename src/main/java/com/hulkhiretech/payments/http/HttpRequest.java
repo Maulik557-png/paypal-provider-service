@@ -12,8 +12,11 @@ import lombok.Data;
 public class HttpRequest {
 
 	HttpMethod httpMethod;
-	String url;
+	
 	HttpHeaders headers;
+	
 	Object body;
+	
+	String url;
 
 }

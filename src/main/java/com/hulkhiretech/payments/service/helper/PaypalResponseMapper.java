@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import com.hulkhiretech.payments.constant.Constant;
 import com.hulkhiretech.payments.constant.ErrorCodeEnum;
 import com.hulkhiretech.payments.exception.PaypalProviderException;
 import com.hulkhiretech.payments.paypal.res.PaypalLink;
@@ -166,7 +167,7 @@ public class PaypalResponseMapper {
 		paymentPendingResponse.setPaypalStatus(orderStatus.getStatus());
 		paymentPendingResponse.setRedirectUrl(
 				orderStatus.getLinks().stream()
-				.filter(link -> "payer-action".equalsIgnoreCase(link.getRel()))
+				.filter(link -> Constant.REL_PAYER_ACTION.equalsIgnoreCase(link.getRel()))
 				.map(PaypalLink::getHref)
 				.findFirst()
 				.orElse(null));
