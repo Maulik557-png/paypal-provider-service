@@ -62,10 +62,12 @@ public class PaypalRequestBuilder {
 	 * @return the prepared HttpRequest
 	 */
 	public HttpRequest prepareTokenRequest() {
+		
+		// Prepare headers and body
 		HttpHeaders headers = new HttpHeaders();
-
 		headers.setBasicAuth(clientID, clientSecret);
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		
 		MultiValueMap<String, String> reqBody = new LinkedMultiValueMap<>();  
 		reqBody.add(Constant.GRANT_TYPE, Constant.CLIENT_CREDENTIALS);
 		
