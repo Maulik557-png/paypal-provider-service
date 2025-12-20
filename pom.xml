@@ -29,15 +29,14 @@
 			</activation>
 			<properties>
 				<spring.profiles.active>local</spring.profiles.active>
-				<logging.path>
-					C:\\Users\\smaul\\Workspace\\workspace-oct25\\logs\\paypal-provider-service</logging.path>
+				<logging.path>C:\\Users\\smaul\\Workspace\\workspace-oct25\\logs\\paypal-provider-service</logging.path>
 			</properties>
 		</profile>
 		<profile>
 			<id>dev</id>
 			<properties>
 				<spring.profiles.active>dev</spring.profiles.active>
-				<logging.path>/home/ec2-user/logs/paypal-provider-service/paypal-provider-service.log</logging.path>
+				<logging.path>/home/ec2-user/logs/paypal-provider-service/</logging.path>
 			</properties>
 		</profile>
 		<profile>
@@ -115,6 +114,13 @@
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-tracing-bridge-brave</artifactId>
 		</dependency>
+		
+		<dependency>
+			<groupId>io.awspring.cloud</groupId>
+			<artifactId>spring-cloud-starter-aws-secrets-manager-config</artifactId>
+			<version>2.4.2</version>
+		</dependency>
+	
 	</dependencies>
 
 	<build>
@@ -137,5 +143,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
