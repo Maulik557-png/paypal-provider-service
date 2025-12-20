@@ -1,5 +1,9 @@
 package com.hulkhiretech.payments.service;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Comparator;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -54,11 +58,14 @@ public class PaymentValidator {
 	public void validateCreateOrderRequest(CreateOrderReq createOrderReq, HttpRequest httpRequest) {
 	    log.info("Validating CreateOrderReq: {}", createOrderReq);
 
+	    Field[] fields = createOrderReq.getClass().getDeclaredFields();
+	    Arrays.sort(fields, Comparator.comparing(Field::getName));
+	    
 	    validateObjectNotNull(createOrderReq, "CreateOrderReq");
-	    validateField(createOrderReq.getCurrencyCode(), ErrorCodeEnum.INVALID_CURRENCY_CODE, "Currency code");
-	    validateAmount(createOrderReq.getAmount());
-	    validateField(createOrderReq.getReturnUrl(), ErrorCodeEnum.INVALID_RETURN_URL, "Return URL");
-	    validateField(createOrderReq.getCancelUrl(), ErrorCodeEnum.INVALID_CANCEL_URL, "Cancel URL");
+	    validateAmount(createOrderReq.getAmount(), ErrorCodeEnum.INVALID_AMOUNT, fields[0].getName());
+	    validateField(createOrderReq.getCancelUrl(), ErrorCodeEnum.INVALID_CANCEL_URL, fields[1].getName());
+	    validateField(createOrderReq.getCurrencyCode(), ErrorCodeEnum.INVALID_CURRENCY_CODE, fields[2].getName());	
+	    validateField(createOrderReq.getReturnUrl(), ErrorCodeEnum.INVALID_RETURN_URL, fields[3].getName());
 
 	    validateObjectNotNull(httpRequest, "HttpRequest");
 	    validateHttpRequest(httpRequest);
@@ -137,12 +144,12 @@ public class PaymentValidator {
 	 * @param amount the amount to validate
 	 * @throws PaypalProviderException if the amount is null or less than or equal to zero
 	 */
-	private void validateAmount(Double amount) {
+	private void validateAmount(Double amount, ErrorCodeEnum errorCodeEnum, String fieldName) {
 	    if (amount == null || amount <= 0) {
-	        log.error("Amount must be a valid value greater than zero");
+	        log.error("{} must be a valid value greater than zero", fieldName);
 	        throw new PaypalProviderException(
-	                ErrorCodeEnum.INVALID_AMOUNT.getErrorCode(),
-	                ErrorCodeEnum.INVALID_AMOUNT.getErrorMessage(),
+	                errorCodeEnum.getErrorCode(),
+	                errorCodeEnum.getErrorMessage(),
 	                HttpStatus.BAD_REQUEST);
 	    }
 	}

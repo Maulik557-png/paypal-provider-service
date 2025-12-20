@@ -27,6 +27,8 @@ public class Constant {
 	
 	public static final String PAYER_ACTION_REQUIRED = "PAYER_ACTION_REQUIRED";
 	
+	public static final String REL_PAYER_ACTION = "payer-action";
+	
 	public static final String NO_BODY = "";
 	
 	public static final String APPROVED = "APPROVED";
