@@ -15,12 +15,10 @@ import com.hulkhiretech.payments.paypal.res.PaypalOrder;
 import com.hulkhiretech.payments.pojo.CreateOrderReq;
 import com.hulkhiretech.payments.pojo.OrderResponse;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class PaymentValidator {
 
 	/**
