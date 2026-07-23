@@ -1,3 +1,7 @@
+# =====================================
+#  Java & Spring Boot
+# =====================================
+
 # These are some examples of commonly ignored file patterns.
 # You should customize this list as applicable to your project.
 # Learn more about .gitignore:
@@ -48,3 +52,54 @@ Thumbs.db
 *.mov
 *.wmv
 
+.classpath
+.factorypath
+.project
+.settings/
+
+# Maven / Gradle
+target/
+build/
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs
+logs/
+*.log
+*.out
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# OS specific
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# =====================================
+#  Sensitive configuration files
+# =====================================
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+
+# =====================================
+#  private test configs
+# =====================================
+/config/
+/secrets/
+/private/
