@@ -15,7 +15,6 @@
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>@logging.path@/${springAppName}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!--<fileNamePattern>@logging.path@/${springAppName}.log.%d{yyyy-MM-dd_HH-mm}</fileNamePattern>-->
             <fileNamePattern>@logging.path@/${springAppName}.log.%d{yyyy-MM-dd_HH}</fileNamePattern>
             <maxHistory>20</maxHistory>
         </rollingPolicy>
